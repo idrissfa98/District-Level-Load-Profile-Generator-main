@@ -7,9 +7,7 @@ from subprocess import call
 def read_DistrictLevelData():
     DistrictLevelData=pd.read_csv ("High_Level_Input_Data.csv", na_values=["nan", "NaN", "NAN", "na", "n/a", "/", "-", "--", ".", "_", "o", "O","None"],encoding='latin1')
     if DistrictLevelData.isnull().sum().sum() > 0:
-        print("some variables in DistrictLevelData.csv file are not defined")
-        time.sleep(5)   # Delays for 5 seconds
-        sys.exit()
+        raise ValueError("some variables in DistrictLevelData.csv file are not defined")
     return DistrictLevelData
 
 # Estimate the number of dwellings in district level
@@ -17,9 +15,7 @@ def Estimate_Number_of_Dwellings(DistrictLevelData):
     From=pd.to_datetime(DistrictLevelData.iloc[0,0])
     To=pd.to_datetime(DistrictLevelData.iloc[0,1])
     if To <= From:
-        print("ADJUST TIME FRAME: Ending-date (To) should be after Starting-date (From)")
-        time.sleep(5)   # Delays for 5 seconds
-        sys.exit()
+        raise ValueError("ADJUST TIME FRAME: Ending-date (To) should be after Starting-date (From)")
     NoShops=DistrictLevelData.iloc[0,2]
     Pop=DistrictLevelData.iloc[0,3]
     Tax=DistrictLevelData.iloc[0,4]
@@ -28,14 +24,13 @@ def Estimate_Number_of_Dwellings(DistrictLevelData):
     TaxIQD=DistrictLevelData.iloc[0,7]
     Dwellings=DistrictLevelData.iloc[0,8]
     Room=DistrictLevelData.iloc[:,9:18]
-    ResidentialDensity=(DistrictLevelData.iloc[0,18]/100) #Aire en hectare
+    ResidentialDensity=(DistrictLevelData.iloc[0,18]/100)  #unités/hectare
     Unemployed=DistrictLevelData.iloc[0,19]
-    
     TotalRoom=(Dwellings/100)*((1*Room.iloc[0,0])+(2*Room.iloc[0,1])+(3*Room.iloc[0,2])+(4*Room.iloc[0,3])+(5*Room.iloc[0,4])+(6*Room.iloc[0,5])+(7*Room.iloc[0,6])+(8*Room.iloc[0,7])+(9*Room.iloc[0,8]))
     RoomSize=(Dwellings/TotalRoom)/(ResidentialDensity)
     UnEpeople=Unemployed//(Tax/2)
     Inhabitant=Pop//Tax
-    
+
     TaxQ1=((TaxRatio*TaxMedian)-TaxIQD+TaxMedian)/(TaxRatio+1)
     if TaxQ1 <0:
        TaxQ1=0
@@ -48,7 +43,6 @@ def Estimate_Number_of_Dwellings(DistrictLevelData):
     PL1=1250*12
 # Poverty Line (PL) for a family (yearly income in euros)       
     PL2=2500*12
-
 # No.s of Dwelling based on Tax-Condition (default-Normal distribution)
     Ratio_Rich=0.25
     Ratio_Average=0.25
@@ -67,7 +61,7 @@ def Estimate_Number_of_Dwellings(DistrictLevelData):
        Ratio_Poor=0.40
        Ratio_VPoor=0.60
 # No.s of Dwelling based on Tax-Condition-3
-    if TaxMax <= PL2 and TaxMedian==PL1:
+    if TaxMax <= PL2 and TaxMedian == PL1:
        Ratio_Rich=0.0
        Ratio_Average=0.10
        Ratio_Poor=0.40
